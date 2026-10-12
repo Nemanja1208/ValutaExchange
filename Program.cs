@@ -1,82 +1,149 @@
-﻿namespace ValutaExchange
+﻿using System;
+using System.Text;
+
+namespace ValutaExchange
 {
-    internal class Program
+    class Program
     {
+        const int MinLength = 8;
+
         static void Main(string[] args)
         {
-            //Skapa en konsolapplikation som konverterar en summa pengar
-            //från en valuta till en annan.
-            //Inkludera typkonverteringar, operatörer och kontrollflöde.
-
-            //Instruktioner:
-            //Be användaren att ange en summa pengar i SEK.
-            // Att skriva ut grejer i terminal man använder Console.WriteLine()
-            // läsa in data från terminalen använder man Console.ReadLine().
-
-            //Jag frågar användaren att ange en summa pengar i SEK.
-            Console.WriteLine("Ange en summa pengar i SEK:");
-
-            // Jag läser in summan från terminalen från använderan SOM ETT STRÄNG 
-            string summaSEKSomString = Console.ReadLine()!;
-
-            Console.WriteLine("Du angav: " + summaSEKSomString);
-
-            // Jag konverterar summan från string till double
-            double beloppSEKSOMCIFRA = double.Parse(summaSEKSomString);
-
-            //Ange en lista över tillgängliga valutor(t.ex.EUR, GBP, JPY, USD).
-            Console.WriteLine("Du kan konvertera till bara dessa EUR, GBP, JPY, USD");
-
-            // Be användaren att välja en valuta att konvertera till.
-            string userInputValuta = Console.ReadLine()!;
-            Console.WriteLine("Du valde: " + userInputValuta);
-
-            // Vi behöver en variabel för att lagra det konverterade beloppet * kursen för den valda valutan.
-            double summanAnvändarenFårBeroendePåValdValuta = 0.0;
-
-
-            //Använd en switch-sats för att hantera valutaomvandlingen.
-            //Utför omvandlingen med multiplikationsoperatorer och skriv gjutning vid behov.
-            switch (userInputValuta)
+            try
             {
-                case "EUR":
-                    //kontrollera kurs
-                    double kursEURmotSEK = 0.088; //1 SEK = 0.091 EUR
-                    Console.WriteLine("Kursen för EUR mot SEK är: " + kursEURmotSEK);
-                    summanAnvändarenFårBeroendePåValdValuta = beloppSEKSOMCIFRA * kursEURmotSEK;
-                    break;
-
-                case "JPY":
-                    double kursJPYmotSEK = 14.0; //1 SEK = 14 JPY
-                    Console.WriteLine("Kursen för JPY mot SEK är: " + kursJPYmotSEK);
-
-                    // Vi gör omvandlingen från SEK till JPY
-                    summanAnvändarenFårBeroendePåValdValuta = beloppSEKSOMCIFRA * kursJPYmotSEK;
-                    break;
-
-                case "GBP":
-                    double kursGBPmotSEK = 0.077; //1 SEK = 0.077 GBP
-                    Console.WriteLine("Kursen för GBP mot SEK är: " + kursGBPmotSEK);
-                    // Vi gör omvandlingen från SEK till GBP
-                    summanAnvändarenFårBeroendePåValdValuta = beloppSEKSOMCIFRA * kursGBPmotSEK;
-                    
-                    break;
-
-                case "USD":
-                    double kursUSDmotSEK = 0.097; //1 SEK = 0.097 USD
-                    Console.WriteLine("Kursen för USD mot SEK är: " + kursUSDmotSEK);
-                    // Vi gör omvandlingen från SEK till USD
-                    summanAnvändarenFårBeroendePåValdValuta = beloppSEKSOMCIFRA * kursUSDmotSEK;
-
-                    break;
-                default:
-                    Console.WriteLine("Okänt valuter. Vänligen välj en av de tillgängliga valutor: EUR, GBP, JPY, USD.");
-                    break;
+                Run();
+            }
+            catch (Exception ex)
+            {
+                // Visa felet i stället för att fönstret bara stängs
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nEtt fel uppstod:");
+                Console.WriteLine(ex);
+                Console.ResetColor();
+                // nemo nya kommentar
             }
 
-            //Visa det konverterade beloppet.
-            Console.WriteLine($"Beloppet i {userInputValuta} är: " + summanAnvändarenFårBeroendePåValdValuta);
+            // Håll fönstret öppet tills användaren trycker på en tangent
+            Console.WriteLine("\nTryck på valfri tangent för att avsluta...");
+            if (!Console.IsInputRedirected)
+                Console.ReadKey(true);
+        }
 
+        static void Run()
+        {
+            // Gör att å, ä, ö visas korrekt (kan kasta fel i vissa miljöer, därför try/catch)
+            try { Console.OutputEncoding = Encoding.UTF8; } catch { }
+
+            Console.WriteLine("=== Lösenordskontroll ===");
+
+            bool keepGoing = true;
+
+            // Huvudloop: låter användaren testa flera lösenord
+            while (keepGoing)
+            {
+                Console.Write("\nAnge ett lösenord: ");
+                string password = Console.ReadLine();
+
+                // null betyder att konsolen inte kan ta emot inmatning (t.ex. fel debug-läge)
+                if (password == null)
+                {
+                    Console.WriteLine("\nIngen inmatning tillgänglig. Kör appen i en riktig terminal.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    Console.WriteLine("Du måste ange ett lösenord.");
+                    continue;
+                }
+
+                // --- 1. Analysera lösenordet tecken för tecken ---
+                bool hasUpper = false;
+                bool hasLower = false;
+                bool hasDigit = false;
+                bool hasSpecial = false;
+
+                foreach (char c in password)
+                {
+                    if (char.IsUpper(c))
+                        hasUpper = true;
+                    else if (char.IsLower(c))
+                        hasLower = true;
+                    else if (char.IsDigit(c))
+                        hasDigit = true;
+                    else if (!char.IsWhiteSpace(c))
+                        hasSpecial = true; // Allt som inte är bokstav, siffra eller mellanslag
+                }
+
+                bool hasLength = password.Length >= MinLength;
+                bool hasMixedCase = hasUpper && hasLower;
+
+                // --- 2. Räkna poäng (0–4) ---
+                int score = 0;
+                if (hasLength) score++;
+                if (hasMixedCase) score++;
+                if (hasDigit) score++;
+                if (hasSpecial) score++;
+
+                // --- 3. Visa resultat per kriterium ---
+                Console.WriteLine("\nResultat:");
+                PrintCheck(hasLength, $"Minst {MinLength} tecken (du har {password.Length})");
+                PrintCheck(hasMixedCase, "Både stora och små bokstäver");
+                PrintCheck(hasDigit, "Minst en siffra");
+                PrintCheck(hasSpecial, "Minst ett specialtecken");
+
+                // --- 4. Bedöm styrkan ---
+                // Längd är ett grundkrav: för kort lösenord blir alltid "Svagt"
+                string rating;
+                ConsoleColor color;
+
+                if (!hasLength || score <= 2)
+                {
+                    rating = "Svagt";
+                    color = ConsoleColor.Red;
+                }
+                else if (score == 3)
+                {
+                    rating = "Moderat";
+                    color = ConsoleColor.Yellow;
+                }
+                else
+                {
+                    rating = "Starkt";
+                    color = ConsoleColor.Green;
+                }
+
+                Console.Write("\nLösenordets styrka: ");
+                Console.ForegroundColor = color;
+                Console.WriteLine($"{rating} ({score}/4)");
+                Console.ResetColor();
+
+                // --- 5. Tips för förbättring ---
+                if (score < 4)
+                {
+                    Console.WriteLine("\nTips för att förbättra:");
+                    if (!hasLength) Console.WriteLine($"- Gör lösenordet minst {MinLength} tecken långt.");
+                    if (!hasMixedCase) Console.WriteLine("- Blanda stora och små bokstäver.");
+                    if (!hasDigit) Console.WriteLine("- Lägg till minst en siffra.");
+                    if (!hasSpecial) Console.WriteLine("- Lägg till ett specialtecken, t.ex. ! @ # $ %.");
+                }
+
+                // --- 6. Fråga om användaren vill fortsätta ---
+                Console.Write("\nVill du testa ett till lösenord? (j/n): ");
+                string answer = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
+                keepGoing = answer == "j" || answer == "ja";
+            }
+
+            Console.WriteLine("\nHej då!");
+        }
+
+        // Hjälpmetod som skriver ut ett kriterium med [x] eller [ ]
+        static void PrintCheck(bool passed, string text)
+        {
+            Console.ForegroundColor = passed ? ConsoleColor.Green : ConsoleColor.Red;
+            Console.Write(passed ? "  [x] " : "  [ ] ");
+            Console.ResetColor();
+            Console.WriteLine(text);
         }
     }
 }
