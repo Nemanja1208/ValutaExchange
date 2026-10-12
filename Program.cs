@@ -21,6 +21,8 @@ namespace ValutaExchange
                 Console.WriteLine(ex);
                 Console.ResetColor();
                 // nemo nya kommentar
+                // nya kommentar efter BPR
+                // nya branch
             }
 
             // Håll fönstret öppet tills användaren trycker på en tangent
